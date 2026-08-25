@@ -162,3 +162,30 @@ io.on("connection", (socket) => {
 server.listen(PORT, "0.0.0.0", () => {
     console.log("Grid Lock server running on port " + PORT);
 });
+
+// --- PRIVATE MESSAGING & USER SEARCH ---
+const onlineUsers = new Map();
+
+if (typeof io !== 'undefined') {
+  io.on('connection', (socket) => {
+    socket.on('user_connected', (userId) => {
+      onlineUsers.set(userId, socket.id);
+    });
+
+    socket.on('send_private_message', ({ recipientId, message, senderId }) => {
+      const recipientSocketId = onlineUsers.get(recipientId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('receive_private_message', { senderId, message });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      for (let [userId, socketId] of onlineUsers.entries()) {
+        if (socketId === socket.id) {
+          onlineUsers.delete(userId);
+          break;
+        }
+      }
+    });
+  });
+}
