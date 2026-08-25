@@ -97,3 +97,28 @@
     </script>
 </body>
 </html>
+
+<!-- PRIVATE MESSAGING & SEARCH UI -->
+<script>
+  // Save logged-in user to socket connection
+  const myUserId = localStorage.getItem('userId') || 'user_' + Math.floor(Math.random() * 1000);
+  let currentChatUser = null;
+
+  if (typeof socket !== 'undefined') {
+    socket.emit('user_connected', myUserId);
+
+    socket.on('receive_private_message', (data) => {
+      alert('Private message from ' + data.senderId + ': ' + data.message);
+    });
+  }
+
+  function sendDM(recipientId, message) {
+    if (typeof socket !== 'undefined') {
+      socket.emit('send_private_message', {
+        recipientId: recipientId,
+        senderId: myUserId,
+        message: message
+      });
+    }
+  }
+</script>
