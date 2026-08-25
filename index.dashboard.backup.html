@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Grid Lock</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #050505;
+    color: white;
+}
+
+.overlay {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, #260000 0%, #080000 35%, #050505 70%);
+    padding-bottom: 40px;
+}
+
+header {
+    text-align: center;
+    padding: 45px 15px 25px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: clamp(32px, 9vw, 60px);
+    color: #ff2020;
+    text-shadow: 0 0 20px #ff0000;
+}
+
+header p {
+    color: #aaa;
+    margin-top: 8px;
+    letter-spacing: 2px;
+}
+
+.account {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+.logout {
+    margin-left: 8px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #111;
+    color: #aaa;
+}
+
+.container {
+    width: min(94%, 900px);
+    margin: auto;
+}
+
+.section-title {
+    margin: 30px 0 14px;
+    color: #ff3030;
+    font-size: 22px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.card {
+    display: block;
+    text-decoration: none;
+    color: white;
+    background: linear-gradient(145deg, #171717, #0b0b0b);
+    border: 1px solid #292929;
+    border-radius: 15px;
+    padding: 22px 15px;
+    transition: .2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    border-color: #ff2020;
+    box-shadow: 0 0 18px rgba(255,0,0,.25);
+}
+
+.icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.card h3 {
+    margin: 0 0 6px;
+}
+
+.card p {
+    margin: 0;
+    color: #888;
+    font-size: 13px;
+}
+
+.wide {
+    grid-column: span 2;
+}
+
+.list {
+    background: #0d0d0d;
+    border: 1px solid #222;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #222;
+}
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.list-icon {
+    font-size: 24px;
+}
+
+.list-text {
+    flex: 1;
+}
+
+.list-text strong {
+    display: block;
+}
+
+.list-text span {
+    color: #777;
+    font-size: 12px;
+}
+
+.badge {
+    background: #e51b23;
+    padding: 5px 8px;
+    border-radius: 7px;
+    font-size: 11px;
+}
+
+footer {
+    text-align: center;
+    color: #555;
+    margin-top: 45px;
+    font-size: 12px;
+}
+
+@media (min-width: 650px) {
+    .grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .wide {
+        grid-column: span 2;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+<header>
+    <h1>Grid Lock</h1>
+    <p>WELCOME TO THE DARK SIDE</p>
+</header>
+
+<div class="account">
+    Logged in as <strong id="currentUser"></strong>
+    <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+    <h2 class="section-title">🔥 EXPLORE</h2>
+
+    <div class="grid">
+
+        <a href="downloads.html" class="card">
+            <div class="icon">📁</div>
+            <h3>Downloads</h3>
+            <p>Browse available files</p>
+        </a>
+
+        <a href="scripts.html" class="card">
+            <div class="icon">💻</div>
+            <h3>Scripts</h3>
+            <p>Free scripts and tools</p>
+        </a>
+
+        <a href="chat.html" class="card">
+            <div class="icon">💬</div>
+            <h3>Live Chat</h3>
+            <p>Talk with the community</p>
+        </a>
+
+        <a href="games.html" class="card">
+            <div class="icon">🎮</div>
+            <h3>Games</h3>
+            <p>Explore game pages</p>
+        </a>
+
+        <a href="#" class="card">
+            <div class="icon">🛠️</div>
+            <h3>Tools</h3>
+            <p>Useful online tools</p>
+        </a>
+
+        <a href="#" class="card">
+            <div class="icon">🔥</div>
+            <h3>Trending</h3>
+            <p>What's popular now</p>
+        </a>
+
+        <a href="#" class="card wide">
+            <div class="icon">📋</div>
+            <h3>Requests</h3>
+            <p>Request files, scripts and other content</p>
+        </a>
+
+    </div>
+
+    <h2 class="section-title">🔥 TRENDING</h2>
+
+    <div class="list">
+
+        <div class="list-item">
+            <div class="list-icon">🎮</div>
+            <div class="list-text">
+                <strong>Popular Games</strong>
+                <span>Check out what's getting attention</span>
+            </div>
+            <div class="badge">HOT</div>
+        </div>
+
+        <div class="list-item">
+            <div class="list-icon">💻</div>
+            <div class="list-text">
+                <strong>Popular Scripts</strong>
+                <span>Community favorites</span>
+            </div>
+            <div class="badge">HOT</div>
+        </div>
+
+        <div class="list-item">
+            <div class="list-icon">📁</div>
+            <div class="list-text">
+                <strong>Latest Uploads</strong>
+                <span>Recently added files</span>
+            </div>
+            <div class="badge">NEW</div>
+        </div>
+
+    </div>
+
+    <h2 class="section-title">💬 COMMUNITY</h2>
+
+    <div class="grid">
+
+        <a href="chat.html" class="card">
+            <div class="icon">💬</div>
+            <h3>Live Chat</h3>
+            <p>Join the conversation</p>
+        </a>
+
+        <a href="#" class="card">
+            <div class="icon">📨</div>
+            <h3>Requests</h3>
+            <p>Ask the community</p>
+        </a>
+
+        <a href="#" class="card">
+            <div class="icon">⭐</div>
+            <h3>Favorites</h3>
+            <p>Your saved content</p>
+        </a>
+
+        <a href="#" class="card">
+            <div class="icon">🔔</div>
+            <h3>Notifications</h3>
+            <p>Stay updated</p>
+        </a>
+
+    </div>
+
+</div>
+
+<footer>
+    Grid Lock © 2026
+</footer>
+
+</div>
+
+<script>
+
+const username = localStorage.getItem("darkPageUsername");
+
+if (!username) {
+    window.location.href = "login.html";
+}
+
+document.getElementById("currentUser").textContent = username || "";
+
+function logout() {
+    localStorage.removeItem("darkPageUsername");
+    window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>

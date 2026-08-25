@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Game</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-page {
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .game-message {
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: #ccc;
+        }
+
+        .files-title {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            display: block;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #151515;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .file-item:hover {
+            background: #222;
+        }
+
+        .error {
+            color: #ff4444;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="game-page">
+
+    <div id="gameTitle" class="game-title">
+        Loading...
+    </div>
+
+    <div id="gameMessage" class="game-message">
+        Loading game information...
+    </div>
+
+    <div id="filesSection">
+        <div class="files-title">Files</div>
+        <div id="fileList" class="file-list"></div>
+    </div>
+
+</div>
+
+<script>
+
+    // Get the game name from the URL
+    const params = new URLSearchParams(window.location.search);
+    const gameName = params.get("game");
+
+    const gameTitle = document.getElementById("gameTitle");
+    const gameMessage = document.getElementById("gameMessage");
+    const fileList = document.getElementById("fileList");
+
+    async function loadGame() {
+
+        if (!gameName) {
+            gameTitle.textContent = "Game not found";
+            gameMessage.textContent = "No game was selected.";
+            return;
+        }
+
+        try {
+
+            const response = await fetch("/api/games");
+
+            if (!response.ok) {
+                throw new Error("Could not load games");
+            }
+
+            const games = await response.json();
+
+            const game = games[gameName];
+
+            if (!game) {
+                gameTitle.textContent = "Game not found";
+                gameMessage.textContent =
+                    "The game \"" + gameName + "\" does not exist.";
+                return;
+            }
+
+            // Display title
+            gameTitle.textContent = game.title || gameName;
+
+            // Display message
+            gameMessage.textContent =
+                game.message || "Welcome to this game section.";
+
+            // Display files
+            const files = game.files || [];
+
+            if (files.length === 0) {
+
+                fileList.innerHTML =
+                    "<div style='color:#888;'>No files available yet.</div>";
+
+            } else {
+
+                fileList.innerHTML = "";
+
+                files.forEach(file => {
+
+                    const link = document.createElement("a");
+
+                    link.className = "file-item";
+
+                    if (typeof file === "string") {
+                        link.textContent = file;
+                        link.href = file;
+                    } else {
+                        link.textContent =
+                            file.name || file.title || "Download file";
+
+                        link.href =
+                            file.url || file.path || "#";
+                    }
+
+                    link.target = "_blank";
+
+                    fileList.appendChild(link);
+                });
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            gameTitle.textContent = "Error";
+            gameMessage.textContent =
+                "Could not load the game information.";
+
+        }
+    }
+
+    loadGame();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Game | Grid Lock</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #050505;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.page {
+    min-height: 100vh;
+    padding: 20px;
+    background:
+        radial-gradient(circle at top, #260000, #050505 55%);
+}
+
+.container {
+    width: min(94%, 850px);
+    margin: auto;
+}
+
+.back {
+    display: inline-block;
+    margin: 10px 0 25px;
+    color: #aaa;
+    text-decoration: none;
+}
+
+.hero {
+    text-align: center;
+    padding: 35px 15px;
+    background: linear-gradient(145deg, #181818, #090909);
+    border: 1px solid #292929;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(255,0,0,.12);
+}
+
+.icon {
+    font-size: 70px;
+}
+
+.game-title {
+    margin: 10px 0;
+    font-size: clamp(30px, 8vw, 50px);
+    color: #ff2020;
+    text-shadow: 0 0 15px #ff0000;
+}
+
+.message {
+    color: #aaa;
+    line-height: 1.6;
+}
+
+.badge {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: #e51b23;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.section-title {
+    color: #ff3030;
+    margin: 30px 0 15px;
+}
+
+.files {
+    display: grid;
+    gap: 12px;
+}
+
+.file {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 17px;
+    background: #111;
+    border: 1px solid #292929;
+    border-radius: 14px;
+}
+
+.file-icon {
+    font-size: 28px;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.file-url {
+    color: #666;
+    font-size: 11px;
+    margin-top: 5px;
+    word-break: break-all;
+}
+
+.download {
+    flex-shrink: 0;
+    padding: 10px 13px;
+    border-radius: 9px;
+    background: #e51b23;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.download:hover {
+    background: #ff3030;
+}
+
+.empty,
+.error {
+    padding: 25px;
+    text-align: center;
+    background: #111;
+    border: 1px solid #292929;
+    border-radius: 14px;
+    color: #777;
+}
+
+.error {
+    color: #ff4444;
+}
+
+@media (max-width: 500px) {
+    .file {
+        align-items: flex-start;
+    }
+
+    .download {
+        padding: 9px;
+        font-size: 12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+<div class="container">
+
+<a href="games.html" class="back">← Back to Games</a>
+
+<section class="hero">
+
+    <div id="gameIcon" class="icon">🎮</div>
+
+    <h1 id="gameTitle" class="game-title">
+        Loading...
+    </h1>
+
+    <div id="gameMessage" class="message">
+        Loading game information...
+    </div>
+
+    <div id="fileCount" class="badge">
+        Loading...
+    </div>
+
+</section>
+
+<h2 class="section-title">📦 AVAILABLE FILES</h2>
+
+<div id="fileList" class="files"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const params =
+    new URLSearchParams(window.location.search);
+
+const gameName =
+    params.get("game");
+
+const gameTitle =
+    document.getElementById("gameTitle");
+
+const gameMessage =
+    document.getElementById("gameMessage");
+
+const gameIcon =
+    document.getElementById("gameIcon");
+
+const fileCount =
+    document.getElementById("fileCount");
+
+const fileList =
+    document.getElementById("fileList");
+
+
+function getIcon(title) {
+
+    const text =
+        String(title || "").toLowerCase();
+
+    if (text.includes("free fire"))
+        return "🔥";
+
+    if (text.includes("pubg"))
+        return "🎯";
+
+    if (text.includes("call of duty"))
+        return "🎮";
+
+    if (text.includes("fortnite"))
+        return "⚡";
+
+    if (text.includes("roblox"))
+        return "🧱";
+
+    return "🎮";
+}
+
+
+function showError(message) {
+
+    gameTitle.textContent = "Game not found";
+    gameMessage.textContent = message;
+    fileCount.textContent = "ERROR";
+
+    fileList.innerHTML =
+        '<div class="error">' +
+        message +
+        '</div>';
+}
+
+
+async function loadGame() {
+
+    if (!gameName) {
+
+        showError("No game was selected.");
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch("/api/games");
+
+        if (!response.ok) {
+            throw new Error("Could not load games.");
+        }
+
+        const games =
+            await response.json();
+
+        const game =
+            games[gameName];
+
+        if (!game) {
+
+            showError(
+                'The game "' +
+                gameName +
+                '" does not exist.'
+            );
+
+            return;
+        }
+
+        const title =
+            game.title || gameName;
+
+        const message =
+            game.message ||
+            "Welcome to this game section.";
+
+        const files =
+            Array.isArray(game.files)
+            ? game.files
+            : [];
+
+        document.title =
+            title + " | Grid Lock";
+
+        gameTitle.textContent =
+            title;
+
+        gameMessage.textContent =
+            message;
+
+        gameIcon.textContent =
+            getIcon(title);
+
+        fileCount.textContent =
+            files.length +
+            (files.length === 1
+                ? " FILE"
+                : " FILES");
+
+
+        if (files.length === 0) {
+
+            fileList.innerHTML =
+                '<div class="empty">' +
+                'No files are available yet.' +
+                '</div>';
+
+            return;
+        }
+
+
+        fileList.innerHTML = "";
+
+
+        files.forEach(file => {
+
+            const name =
+                typeof file === "string"
+                    ? file
+                    : (
+                        file.name ||
+                        file.title ||
+                        "Download file"
+                    );
+
+            const url =
+                typeof file === "string"
+                    ? file
+                    : (
+                        file.url ||
+                        file.path ||
+                        "#"
+                    );
+
+
+            const box =
+                document.createElement("div");
+
+            box.className = "file";
+
+
+            const icon =
+                document.createElement("div");
+
+            icon.className = "file-icon";
+
+            icon.textContent = "📦";
+
+
+            const info =
+                document.createElement("div");
+
+            info.className = "file-info";
+
+
+            const fileName =
+                document.createElement("div");
+
+            fileName.className = "file-name";
+
+            fileName.textContent =
+                name;
+
+
+            const fileUrl =
+                document.createElement("div");
+
+            fileUrl.className = "file-url";
+
+            fileUrl.textContent =
+                url;
+
+
+            info.appendChild(fileName);
+            info.appendChild(fileUrl);
+
+
+            const download =
+                document.createElement("a");
+
+            download.className =
+                "download";
+
+            download.textContent =
+                "DOWNLOAD";
+
+            download.href =
+                url;
+
+            download.target =
+                "_blank";
+
+            download.rel =
+                "noopener";
+
+
+            box.appendChild(icon);
+            box.appendChild(info);
+            box.appendChild(download);
+
+            fileList.appendChild(box);
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError(
+            "Could not load the game information."
+        );
+
+    }
+}
+
+
+loadGame();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Lock - Home</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 90vh;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: red;
+            font-size: 2em;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+        .header p {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+        .card-container {
+            width: 100%;
+            max-width: 320px;
+        }
+        .card {
+            background: #111;
+            border: 1px solid red;
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: white;
+            display: block;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+        .card:active {
+            transform: scale(0.98);
+        }
+        .badge {
+            background: rgba(255, 0, 0, 0.2);
+            color: red;
+            font-size: 0.7em;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .card h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.5em;
+        }
+        .card p {
+            color: #aaa;
+            font-size: 0.9em;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Grid Lock</h1>
+        <p>⚡ QUICK ACCESS</p>
+    </div>
+
+    <div class="card-container">
+        <a href="chat.html" class="card">
+            <div style="font-size: 2em; margin-bottom: 8px;">💬</div>
+            <span class="badge">COMMUNITY</span>
+            <h2>Live Chat</h2>
+            <p>Talk with the community in real-time or send DMs.</p>
+        </a>
+    </div>
+
+    <script>
+        // Check if logged in; if not, redirect to login page
+        const user = localStorage.getItem("username") || localStorage.getItem("user");
+        if (!user) {
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Lock - Downloads</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="overlay">
+
+    <header>
+        <h1>DOWNLOADS</h1>
+        <p>FILES FROM Grid Lock</p>
+    </header>
+
+    <div id="files">
+        <p>Loading files...</p>
+    </div>
+
+    <a href="index.html" class="menu-button">
+        ← BACK TO Grid Lock
+    </a>
+
+</div>
+
+<script>
+async function loadFiles() {
+    const filesBox = document.getElementById("files");
+
+    try {
+        const response = await fetch("/api/files");
+        const files = await response.json();
+
+        filesBox.innerHTML = "";
+
+        if (files.length === 0) {
+            filesBox.innerHTML = "<p>No files uploaded yet.</p>";
+            return;
+        }
+
+        files.forEach(file => {
+            const item = document.createElement("div");
+            item.className = "file-item";
+
+            item.innerHTML = `
+                <h3>${escapeHtml(file.name)}</h3>
+                <a class="download-button"
+                   href="${file.url}"
+                   download>
+                   DOWNLOAD
+                </a>
+            `;
+
+            filesBox.appendChild(item);
+        });
+
+    } catch (error) {
+        filesBox.innerHTML = "<p>Could not load files.</p>";
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+loadFiles();
+</script>
+
+</body>
+</html>

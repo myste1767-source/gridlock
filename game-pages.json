@@ -1,0 +1,36 @@
+{
+  "freefire": {
+    "title": "🔥 FREE FIRE",
+    "message": "Welcome to the Free Fire section.",
+    "files": []
+  },
+  "pubg": {
+    "title": "🎮 PUBG MOBILE",
+    "message": "Welcome to the PUBG Mobile section.",
+    "files": []
+  },
+  "codm": {
+    "title": "🎯 CALL OF DUTY MOBILE",
+    "message": "Welcome to the COD Mobile section.",
+    "files": []
+  },
+  "fortnite": {
+    "title": "⚡ FORTNITE",
+    "message": "Welcome to the Fortnite section.",
+    "files": []
+  },
+  "roblox": {
+    "title": "🧱 ROBLOX",
+    "message": "Welcome to the Roblox section.",
+    "files": [
+      {
+        "name": "REDZ-HUB.txt",
+        "url": "/uploads/1786326942717-REDZ-HUB.txt"
+      },
+      {
+        "name": "Delta-2.732.apk",
+        "url": "/uploads/1786328933506-Delta-2.732.apk"
+      }
+    ]
+  }
+}

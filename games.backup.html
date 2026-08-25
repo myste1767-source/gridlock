@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Games | Grid Lock</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #050505;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.page {
+    min-height: 100vh;
+    padding: 20px;
+    background:
+        radial-gradient(circle at top, #260000, #050505 55%);
+}
+
+.header {
+    max-width: 1000px;
+    margin: auto;
+    text-align: center;
+    padding: 30px 10px;
+}
+
+.header h1 {
+    margin: 0;
+    color: #ff2020;
+    font-size: clamp(32px, 8vw, 55px);
+    text-shadow: 0 0 18px #ff0000;
+}
+
+.header p {
+    color: #888;
+}
+
+.search {
+    width: min(100%, 650px);
+    margin: 20px auto 35px;
+    display: block;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    background: #111;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+.search:focus {
+    border-color: #ff2020;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.section-title {
+    color: #ff3030;
+    margin: 30px 0 15px;
+}
+
+.games {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.game-card {
+    display: block;
+    text-decoration: none;
+    color: white;
+    background: linear-gradient(145deg, #181818, #0b0b0b);
+    border: 1px solid #292929;
+    border-radius: 15px;
+    padding: 20px;
+    transition: .2s;
+}
+
+.game-card:hover {
+    transform: translateY(-3px);
+    border-color: #ff2020;
+    box-shadow: 0 0 18px rgba(255,0,0,.25);
+}
+
+.game-icon {
+    font-size: 38px;
+    margin-bottom: 12px;
+}
+
+.game-card h3 {
+    margin: 0 0 7px;
+}
+
+.game-card p {
+    color: #888;
+    margin: 0;
+    font-size: 13px;
+}
+
+.badge {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 5px 8px;
+    border-radius: 7px;
+    background: #e51b23;
+    font-size: 11px;
+}
+
+.empty {
+    text-align: center;
+    color: #777;
+    padding: 40px;
+}
+
+.back {
+    display: block;
+    width: fit-content;
+    margin: 25px auto;
+    color: #aaa;
+    text-decoration: none;
+}
+
+@media (min-width: 650px) {
+    .games {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="header">
+        <h1>🎮 GAMES</h1>
+        <p>WELCOME TO THE DARK GAME HUB</p>
+
+        <input
+            id="search"
+            class="search"
+            type="search"
+            placeholder="🔎 Search games..."
+            autocomplete="off"
+        >
+    </div>
+
+    <main class="container">
+
+        <h2 class="section-title">🔥 TRENDING</h2>
+        <div id="trending" class="games"></div>
+
+        <h2 class="section-title">🆕 ALL GAMES</h2>
+        <div id="games" class="games"></div>
+
+    </main>
+
+    <a href="index.html" class="back">← Back to dashboard</a>
+
+</div>
+
+<script>
+
+let allGames = {};
+
+const gamesContainer =
+    document.getElementById("games");
+
+const trendingContainer =
+    document.getElementById("trending");
+
+const search =
+    document.getElementById("search");
+
+
+function createCard(key, game) {
+
+    const card =
+        document.createElement("a");
+
+    card.className = "game-card";
+
+    card.href =
+        "game.html?game=" +
+        encodeURIComponent(key);
+
+    const icon =
+        document.createElement("div");
+
+    icon.className = "game-icon";
+
+    icon.textContent =
+        getIcon(game.title);
+
+    const title =
+        document.createElement("h3");
+
+    title.textContent =
+        game.title || key;
+
+    const description =
+        document.createElement("p");
+
+    description.textContent =
+        game.message ||
+        "Explore this game.";
+
+    const badge =
+        document.createElement("span");
+
+    badge.className = "badge";
+
+    badge.textContent =
+        (game.files || []).length +
+        " FILES";
+
+    card.appendChild(icon);
+    card.appendChild(title);
+    card.appendChild(description);
+    card.appendChild(badge);
+
+    return card;
+}
+
+
+function getIcon(title) {
+
+    const text =
+        String(title || "").toLowerCase();
+
+    if (text.includes("free fire"))
+        return "🔥";
+
+    if (text.includes("pubg"))
+        return "🎯";
+
+    if (text.includes("call of duty"))
+        return "🎮";
+
+    if (text.includes("fortnite"))
+        return "⚡";
+
+    if (text.includes("roblox"))
+        return "🧱";
+
+    return "🎮";
+}
+
+
+function displayGames(games) {
+
+    gamesContainer.innerHTML = "";
+
+    const entries =
+        Object.entries(games);
+
+    if (entries.length === 0) {
+
+        gamesContainer.innerHTML =
+            '<div class="empty">No games found.</div>';
+
+        return;
+    }
+
+    entries.forEach(([key, game]) => {
+
+        gamesContainer.appendChild(
+            createCard(key, game)
+        );
+
+    });
+}
+
+
+function displayTrending(games) {
+
+    trendingContainer.innerHTML = "";
+
+    const entries =
+        Object.entries(games)
+        .sort((a, b) =>
+            (b[1].files || []).length -
+            (a[1].files || []).length
+        )
+        .slice(0, 3);
+
+    if (entries.length === 0) {
+
+        trendingContainer.innerHTML =
+            '<div class="empty">No trending games yet.</div>';
+
+        return;
+    }
+
+    entries.forEach(([key, game]) => {
+
+        trendingContainer.appendChild(
+            createCard(key, game)
+        );
+
+    });
+}
+
+
+search.addEventListener("input", () => {
+
+    const query =
+        search.value.toLowerCase().trim();
+
+    const filtered = {};
+
+    Object.entries(allGames).forEach(
+        ([key, game]) => {
+
+            const text =
+                (
+                    key + " " +
+                    (game.title || "") + " " +
+                    (game.message || "")
+                ).toLowerCase();
+
+            if (text.includes(query)) {
+                filtered[key] = game;
+            }
+
+        }
+    );
+
+    displayGames(filtered);
+});
+
+
+async function loadGames() {
+
+    try {
+
+        const response =
+            await fetch("/api/games");
+
+        if (!response.ok)
+            throw new Error("Failed");
+
+        allGames =
+            await response.json();
+
+        displayTrending(allGames);
+        displayGames(allGames);
+
+    } catch (error) {
+
+        console.error(error);
+
+        gamesContainer.innerHTML =
+            '<div class="empty">Could not load games.</div>';
+
+        trendingContainer.innerHTML = "";
+
+    }
+}
+
+
+loadGames();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Lock - Scripts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="overlay">
+
+    <header>
+        <h1>Grid Lock</h1>
+        <p>🎮 GAME SCRIPTS</p>
+    </header>
+
+    <main class="menu" id="games">
+        <p>Loading games...</p>
+    </main>
+
+    <a href="index.html" class="menu-button">
+        ← BACK TO Grid Lock
+    </a>
+
+</div>
+
+<script>
+async function loadGames() {
+    const container = document.getElementById("games");
+
+    try {
+        const response = await fetch("/api/games");
+        const games = await response.json();
+
+        container.innerHTML = "";
+
+        Object.entries(games).forEach(([id, game]) => {
+            const button = document.createElement("a");
+
+            button.href = "game.html?game=" + encodeURIComponent(id);
+            button.className = "menu-button";
+            button.textContent = game.title;
+
+            container.appendChild(button);
+        });
+
+    } catch (error) {
+        container.innerHTML = "<p>Could not load games.</p>";
+        console.error(error);
+    }
+}
+
+loadGames();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background:
+        linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.85)),
+        url("images/background.jpeg") center/cover fixed no-repeat;
+    color: #fff;
+}
+
+.overlay {
+    min-height: 100vh;
+    padding: 35px 20px 50px;
+    background:
+        radial-gradient(circle at center, rgba(255,0,0,.12), transparent 45%);
+}
+
+header {
+    width: min(1000px, 100%);
+    margin: 0 auto 35px;
+    padding: 35px 25px;
+    text-align: center;
+    border: 1px solid rgba(255,0,0,.55);
+    background: rgba(5,5,5,.78);
+    box-shadow:
+        0 0 25px rgba(255,0,0,.25),
+        inset 0 0 30px rgba(255,0,0,.08);
+}
+
+header h1 {
+    font-size: clamp(42px, 9vw, 82px);
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: #ff2020;
+    text-shadow:
+        0 0 8px #ff0000,
+        0 0 25px #ff0000;
+}
+
+header p {
+    margin-top: 12px;
+    color: #ddd;
+    font-size: 15px;
+    letter-spacing: 5px;
+}
+
+.menu {
+    width: min(850px, 100%);
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.menu-button,
+.contact-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 85px;
+    padding: 20px;
+    border: 1px solid #ff2525;
+    border-radius: 4px;
+    background:
+        linear-gradient(135deg, rgba(35,0,0,.95), rgba(5,5,5,.95));
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow:
+        0 0 10px rgba(255,0,0,.25),
+        inset 0 0 20px rgba(255,0,0,.06);
+    transition: .25s ease;
+    overflow: hidden;
+}
+
+.menu-button::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: #ff2020;
+    box-shadow: 0 0 15px #ff0000;
+}
+
+.menu-button:hover {
+    transform: translateY(-5px);
+    background: #300000;
+    border-color: #ff4040;
+    box

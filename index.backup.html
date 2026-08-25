@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Lock</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            overflow-y: auto;
+        }
+
+        .overlay {
+            min-height: 100vh;
+        }
+
+        .suggestions {
+            margin: 30px auto;
+            width: min(92%, 600px);
+        }
+
+        .suggestions h2 {
+            text-align: center;
+        }
+
+        #suggestionText {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #151515;
+            color: white;
+            resize: vertical;
+        }
+
+        .suggestion-button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            background: #e51b23;
+            color: white;
+            font-weight: bold;
+        }
+
+        .suggestion-item {
+            margin-top: 12px;
+            padding: 14px;
+            background: #111;
+            border: 1px solid #292929;
+            border-radius: 12px;
+        }
+
+        .suggestion-user {
+            font-weight: bold;
+        }
+
+        .suggestion-time {
+            color: #777;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .account {
+            text-align: center;
+            margin: 15px;
+            color: #aaa;
+        }
+
+        .logout {
+            background: none;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 7px 12px;
+            border-radius: 8px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+    <header>
+        <h1>Grid Lock</h1>
+        <p>WELCOME TO THE DARK SIDE</p>
+    </header>
+
+    <div class="account">
+        Logged in as <strong id="currentUser"></strong>
+        <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <main class="menu">
+
+        <a href="chat.html" class="menu-button chat-button">
+            💬 LIVE CHAT
+        </a>
+
+        <a href="downloads.html" class="menu-button">
+            📁 DOWNLOADS
+        </a>
+
+        <a href="#" class="menu-button">
+            🎁 FREE GIVEAWAYS
+        </a>
+
+        <a href="scripts.html" class="menu-button">
+            💻 FREE SCRIPTS
+        </a>
+
+    </main>
+
+    <section class="suggestions">
+
+        <h2>💡 SUGGESTIONS</h2>
+
+        <textarea
+            id="suggestionText"
+            maxlength="1000"
+            placeholder="Leave a suggestion..."
+        ></textarea>
+
+        <button
+            class="suggestion-button"
+            onclick="sendSuggestion()"
+        >
+            SEND SUGGESTION
+        </button>
+
+        <div id="suggestionList"></div>
+
+    </section>
+
+    <footer>
+        <p>Grid Lock © 2026</p>
+    </footer>
+
+</div>
+
+<script>
+
+const username =
+    localStorage.getItem("darkPageUsername");
+
+if (!username) {
+    window.location.href = "login.html";
+}
+
+document.getElementById("currentUser").textContent =
+    username || "";
+
+
+function logout() {
+
+    localStorage.removeItem("darkPageUsername");
+
+    window.location.href = "login.html";
+}
+
+
+async function sendSuggestion() {
+
+    const textarea =
+        document.getElementById("suggestionText");
+
+    const message =
+        textarea.value.trim();
+
+    if (!message) {
+        alert("Write a suggestion first.");
+        return;
+    }
+
+    try {
+
+        const response = await fetch("/api/suggestions", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                username,
+                message
+            })
+
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "Could not save suggestion.");
+            return;
+        }
+
+        textarea.value = "";
+
+        loadSuggestions();
+
+    } catch (error) {
+
+        alert("Could not connect to the server.");
+
+    }
+}
+
+
+async function loadSuggestions() {
+
+    try {
+
+        const response =
+            await fetch("/api/suggestions");
+
+        const suggestions =
+            await response.json();
+
+        const list =
+            document.getElementById("suggestionList");
+
+        list.innerHTML = "";
+
+        suggestions.forEach(item => {
+
+            const box =
+                document.createElement("div");
+
+            box.className = "suggestion-item";
+
+            const user =
+                document.createElement("div");
+
+            user.className = "suggestion-user";
+
+            user.textContent =
+                item.username;
+
+            const text =
+                document.createElement("div");
+
+            text.textContent =
+                item.message;
+
+            const time =
+                document.createElement("div");
+
+            time.className = "suggestion-time";
+
+            time.textContent =
+                new Date(item.timestamp)
+                    .toLocaleString();
+
+            box.appendChild(user);
+            box.appendChild(text);
+            box.appendChild(time);
+
+            list.appendChild(box);
+
+        });
+
+    } catch (error) {
+
+        console.log(
+            "Could not load suggestions:",
+            error
+        );
+
+    }
+}
+
+loadSuggestions();
+
+</script>
+
+</body>
+</html>

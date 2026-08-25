@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Lock - Login</title>
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #111; padding: 40px 30px; border-radius: 12px; text-align: center; width: 85%; max-width: 320px; border: 1px solid #333; }
+        h2 { color: #fff; margin: 0 0 10px 0; font-size: 1.8em; letter-spacing: 1px; }
+        p { color: #888; font-size: 0.9em; margin-bottom: 25px; }
+        input { width: 100%; box-sizing: border-box; padding: 14px; margin: 8px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px; outline: none; }
+        input:focus { border-color: red; }
+        button { width: 100%; padding: 14px; background: #e60000; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1em; }
+        .toggle { margin-top: 20px; font-size: 0.9em; color: #888; cursor: pointer; }
+        .toggle b { color: #e60000; }
+        #errorMsg { color: #ff4444; margin-top: 15px; font-size: 0.9em; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Grid Lock</h2>
+        <p id="subtitle">Create your account</p>
+        
+        <input type="text" id="username" placeholder="Username" autocomplete="off">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button id="actionBtn" onclick="submitForm()">CREATE ACCOUNT</button>
+        <div id="errorMsg">Could not connect to the server.</div>
+        
+        <div class="toggle" onclick="toggleMode()">
+            <span id="toggleText">Already have an account? <b>Login</b></span>
+        </div>
+    </div>
+
+    <script>
+        let isLogin = false;
+
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('subtitle').innerText = isLogin ? "Login to your account" : "Create your account";
+            document.getElementById('actionBtn').innerText = isLogin ? "LOGIN" : "CREATE ACCOUNT";
+            document.getElementById('toggleText').innerHTML = isLogin ? "Need an account? <b>Register</b>" : "Already have an account? <b>Login</b>";
+            document.getElementById('errorMsg').style.display = "none";
+        }
+
+        async function submitForm() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorDiv = document.getElementById('errorMsg');
+
+            if (!user || !pass) {
+                errorDiv.innerText = "Please enter both fields.";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            // Using relative paths so it never drops connection
+            const endpoint = isLogin ? "/login" : "/register";
+            errorDiv.style.display = "none";
+            document.getElementById('actionBtn').innerText = "WAIT...";
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem("username", data.username);
+                    localStorage.setItem("user", data.username);
+                    window.location.href = "index.html";
+                } else {
+                    errorDiv.innerText = data.message || "Action failed.";
+                    errorDiv.style.display = "block";
+                    document.getElementById('actionBtn').innerText = isLogin ? "LOGIN" : "CREATE ACCOUNT";
+                }
+            } catch (error) {
+                errorDiv.innerText = "Could not connect to the server.";
+                errorDiv.style.display = "block";
+                document.getElementById('actionBtn').innerText = isLogin ? "LOGIN" : "CREATE ACCOUNT";
+            }
+        }
+    </script>
+</body>
+</html>

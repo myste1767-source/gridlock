@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Grid Lock</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    background: #030305;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 15% 15%,
+        rgba(140,0,255,.16),
+        transparent 30%),
+        radial-gradient(circle at 85% 40%,
+        rgba(255,0,50,.12),
+        transparent 35%);
+}
+
+.page {
+    position: relative;
+    min-height: 100vh;
+}
+
+/* TOP BAR */
+
+nav {
+    height: 68px;
+    padding: 0 4%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #24212c;
+    background: rgba(4,4,7,.9);
+    backdrop-filter: blur(15px);
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: #b64cff;
+}
+
+.account {
+    color: #888;
+    font-size: 13px;
+}
+
+.account strong {
+    color: white;
+}
+
+.logout {
+    margin-left: 10px;
+    padding: 8px 13px;
+    border-radius: 8px;
+    border: 1px solid #38343f;
+    background: #111116;
+    color: #aaa;
+}
+
+/* MAIN */
+
+.container {
+    width: min(94%, 1200px);
+    margin: auto;
+}
+
+/* HERO */
+
+.hero {
+    margin: 25px 0;
+    min-height: 330px;
+    border: 1px solid #30243b;
+    border-radius: 25px;
+    overflow: hidden;
+    position: relative;
+    background:
+        linear-gradient(
+            90deg,
+            #08070c 5%,
+            rgba(8,7,12,.9) 38%,
+            rgba(20,5,30,.35)
+        ),
+        radial-gradient(
+            circle at 80% 40%,
+            #671a8e,
+            #13091b 40%,
+            #07070b 70%
+        );
+    box-shadow:
+        0 0 50px rgba(120,0,255,.12);
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    right: 8%;
+    top: 30px;
+    border-radius: 50%;
+    background: #a42cff;
+    filter: blur(100px);
+    opacity: .18;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 55px;
+    max-width: 700px;
+}
+
+.label {
+    color: #bd68ff;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 4px;
+}
+
+.hero h1 {
+    margin: 12px 0;
+    font-size: clamp(42px, 7vw, 78px);
+    line-height: .95;
+}
+
+.hero h1 span {
+    color: #c455ff;
+}
+
+.hero p {
+    color: #999;
+    line-height: 1.6;
+    max-width: 560px;
+}
+
+.hero-button {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 14px 22px;
+    border-radius: 10px;
+    background: linear-gradient(
+        90deg,
+        #852cff,
+        #d23cff
+    );
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow:
+        0 0 25px rgba(167,50,255,.3);
+}
+
+/* STATS */
+
+.stats {
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.stat {
+    padding: 18px;
+    border-radius: 14px;
+    background: #0c0b11;
+    border: 1px solid #25212e;
+}
+
+.stat strong {
+    display: block;
+    color: #d57cff;
+    font-size: 23px;
+}
+
+.stat span {
+    color: #666;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+/* SECTION */
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 30px 0 15px;
+}
+
+.section-title h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.section-title span {
+    color: #666;
+    font-size: 11px;
+}
+
+/* TILES */
+
+.tiles {
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+    grid-auto-rows: 180px;
+    gap: 14px;
+}
+
+.tile {
+    position: relative;
+    overflow: hidden;
+    padding: 24px;
+    border-radius: 18px;
+    border: 1px solid #2a2631;
+    background:
+        linear-gradient(
+            145deg,
+            #17151c,
+            #09090d
+        );
+    color: white;
+    text-decoration: none;
+    transition: .25s;
+}
+
+.tile:hover {
+    transform: translateY(-5px);
+    border-color: #b44cff;
+    box-shadow:
+        0 15px 40px rgba(142,0,255,.18);
+}
+
+.tile::after {
+    content: "";
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    right: -45px;
+    top: -45px;
+    border-radius: 50%;
+    background: #8d2cff;
+    filter: blur(60px);
+    opacity: .16;
+}
+
+.tile.large {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.tile.wide {
+    grid-column: span 2;
+}
+
+.tile-content {
+    position: relative;
+    z-index: 2;
+}
+
+.icon {
+    font-size: 42px;
+    margin-bottom: 20px;
+}
+
+.tile h3 {
+    margin: 0 0 7px;
+    font-size: 22px;
+}
+
+.tile p {
+    margin: 0;
+    color: #777;
+    line-height: 1.5;
+    font-size: 13px;
+}
+
+.tag {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: rgba(177,65,255,.13);
+    color: #c76dff;
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.arrow {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    color: #b64cff;
+    font-size: 20px;
+}
+
+/* MOBILE PORTRAIT */
+
+@media (max-width: 700px) {
+
+    nav {
+        height: 62px;
+    }
+
+    .account {
+        font-size: 11px;
+    }
+
+    .hero {
+        min-height: 300px;
+    }
+
+    .hero-content {
+        padding: 35px 25px;
+    }
+
+    .stats {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .tiles {
+        grid-template-columns:
+            repeat(2, 1fr);
+        grid-auto-rows: 180px;
+    }
+
+    .tile.large {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+
+    .tile.wide {
+        grid-column: span 2;
+    }
+}
+
+/* LANDSCAPE PHONE */
+
+@media (orientation: landscape)
+       and (max-height: 600px) {
+
+    .hero {
+        min-height: 260px;
+    }
+
+    .hero-content {
+        padding: 35px 45px;
+    }
+
+    .hero h1 {
+        font-size: 48px;
+    }
+
+    .tiles {
+        grid-template-columns:
+            repeat(4, 1fr);
+        grid-auto-rows: 150px;
+    }
+
+    .tile.large {
+        grid-column: span 2;
+        grid-row: span 2;
+    }
+
+    .tile {
+        padding: 18px;
+    }
+
+    .icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+}
+
+footer {
+    text-align: center;
+    color: #444;
+    font-size: 11px;
+    padding: 45px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+<nav>
+
+    <div class="logo">
+        THE <span>DARK</span> PAGE
+    </div>
+
+    <div class="account">
+        Logged in as
+        <strong id="currentUser"></strong>
+
+        <button
+            class="logout"
+            onclick="logout()">
+            Logout
+        </button>
+    </div>
+
+</nav>
+
+<main class="container">
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="label">
+            THE DARK GAMING COMMUNITY
+        </div>
+
+        <h1>
+            YOUR NEXT<br>
+            <span>ADVENTURE</span>
+        </h1>
+
+        <p>
+            Explore games, downloads, scripts,
+            community features and more.
+            Everything in one place.
+        </p>
+
+                
+            href="games.html"
+            class="hero-button">
+            EXPLORE GAMES →
+        </a>
+
+    </div>
+
+</section>
+
+
+<section class="stats">
+
+    <div class="stat">
+        <strong>06</strong>
+        <span>Sections</span>
+    </div>
+
+    <div class="stat">
+        <strong>24/7</strong>
+        <span>Community</span>
+    </div>
+
+    <div class="stat">
+        <strong>NEW</strong>
+        <span>Updates</span>
+    </div>
+
+    <div class="stat">
+        <strong>FREE</strong>
+        <span>Access</span>
+    </div>
+
+</section>
+
+
+<div class="section-title">
+
+    <h2>🔥 EXPLORE</h2>
+
+    <span>
+        DISCOVER THE DARK SIDE
+    </span>
+
+</div>
+
+
+<section class="tiles">
+
+    <a
+        href="games.html"
+        class="tile large">
+
+        <div class="tile-content">
+
+            <div class="icon">🎮</div>
+
+            <div class="tag">
+                FEATURED
+            </div>
+
+            <h3>
+                Games
+            </h3>
+
+            <p>
+                Explore game pages,
+                featured content and
+                available files.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+
+    <a
+        
+
+        <div class="tile-content">
+
+            <div class="icon">📁</div>
+
+            <div class="tag">
+                FILES
+            </div>
+
+            <h3>
+                Downloads
+            </h3>
+
+            <p>
+                Browse available files.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+
+    <a
+        href="scripts.html"
+        class="tile">
+
+        <div class="tile-content">
+
+            <div class="icon">💻</div>
+
+            <div class="tag">
+                TOOLS
+            </div>
+
+            <h3>
+                Scripts
+            </h3>
+
+            <p>
+                Free scripts and tools.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+
+    <a
+        href="chat.html"
+        class="tile wide">
+
+        <div class="tile-content">
+
+            <div class="icon">💬</div>
+
+            <div class="tag">
+                COMMUNITY
+            </div>
+
+            <h3>
+                Live Chat
+            </h3>
+
+            <p>
+                Talk with the community
+                in real time.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+
+    <a
+        href="games.html"
+        class="tile">
+
+        <div class="tile-content">
+
+            <div class="icon">🔥</div>
+
+            <div class="tag">
+                HOT
+            </div>
+
+            <h3>
+                Trending
+            </h3>
+
+            <p>
+                See what's popular now.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+
+    <a
+        href="scripts.html"
+        class="tile">
+
+        <div class="tile-content">
+
+            <div class="icon">🛠️</div>
+
+            <div class="tag">
+                UTILITIES
+            </div>
+
+            <h3>
+                Tools
+            </h3>
+
+            <p>
+                Useful tools and resources.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+
+    <a
+        href="#"
+        class="tile wide">
+
+        <div class="tile-content">
+
+            <div class="icon">📋</div>
+
+            <div class="tag">
+                COMMUNITY
+            </div>
+
+            <h3>
+                Requests
+            </h3>
+
+            <p>
+                Request games, files
+                and new content.
+            </p>
+
+        </div>
+
+        <div class="arrow">↗</div>
+
+    </a>
+
+</section>
+
+</main>
+
+
+<footer>
+    Grid Lock © 2026
+</footer>
+
+</div>
+
+
+<script>
+
+const username =
+    localStorage.getItem(
+        "darkPageUsername"
+    );
+
+if (!username) {
+    window.location.href =
+        "login.html";
+}
+
+document.getElementById(
+    "currentUser"
+).textContent =
+    username || "";
+
+
+function logout() {
+
+    localStorage.removeItem(
+        "darkPageUsername"
+    );
+
+    window.location.href =
+        "login.html";
+}
+
+</script>
+
+</body>
+</html>

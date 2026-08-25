@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Lock - Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="overlay">
+
+    <!-- DASHBOARD -->
+    <section>
+        <h2>📊 DASHBOARD</h2>
+
+        <p>🟢 SERVER:
+            <span id="serverStatus">CHECKING...</span>
+        </p>
+
+        <p>📁 FILES:
+            <span id="fileCount">--</span>
+        </p>
+
+        <p>⏱ UPTIME:
+            <span id="uptime">0 seconds</span>
+        </p>
+
+        <br>
+
+        <button id="refreshDashboard">
+            🔄 REFRESH DASHBOARD
+        </button>
+
+        <p id="dashboardStatus"></p>
+    </section>
+
+
+    <!-- CONTENT EDITOR -->
+    <section>
+        <h2>✏️ CONTENT EDITOR</h2>
+
+        <label>Site Title</label>
+        <input type="text" id="title">
+
+        <label>Welcome Message</label>
+        <input type="text" id="welcome">
+
+        <label>Giveaways Button</label>
+        <input type="text" id="giveaways">
+
+        <label>Scripts Button</label>
+        <input type="text" id="scripts">
+
+        <label>WhatsApp Link</label>
+        <input type="text" id="whatsapp">
+
+        <label>Instagram Link</label>
+        <input type="text" id="instagram">
+
+        <label>Footer</label>
+        <input type="text" id="footer">
+
+        <br><br>
+
+        <button id="saveContent">
+            💾 SAVE CHANGES
+        </button>
+
+        <p id="contentStatus"></p>
+    </section>
+
+
+    <!-- FILE UPLOAD -->
+<section>
+    <h2>📤 UPLOAD FILE</h2>
+
+    <label for="gameSelect">Choose Game:</label>
+
+    <select id="gameSelect">
+        <option value="freefire">🔥 Free Fire</option>
+        <option value="pubg">🎮 PUBG Mobile</option>
+        <option value="codm">🎯 Call of Duty Mobile</option>
+        <option value="fortnite">⚡ Fortnite</option>
+        <option value="roblox">🧱 Roblox</option>
+    </select>
+
+    <br><br>
+
+    <input type="file" id="fileInput">
+
+    <br><br>
+
+    <button id="uploadButton">
+        📤 UPLOAD FILE
+    </button>
+
+    <p id="uploadStatus"></p>
+</section>
+
+
+    <!-- BACK BUTTON -->
+    <section>
+        <button onclick="window.location.href='/'">
+            ← BACK TO Grid Lock
+        </button>
+    </section>
+
+</div>
+
+
+<script>
+
+/* =========================
+   DASHBOARD
+========================= */
+
+const startTime = Date.now();
+
+function updateUptime() {
+
+    const seconds = Math.floor(
+        (Date.now() - startTime) / 1000
+    );
+
+    let uptimeText;
+
+    if (seconds < 60) {
+
+        uptimeText = seconds + " seconds";
+
+    } else {
+
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+
+        if (minutes < 60) {
+
+            uptimeText =
+                minutes + " min " +
+                remainingSeconds + " sec";
+
+        } else {
+
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+
+            uptimeText =
+                hours + " hr " +
+                remainingMinutes + " min";
+        }
+    }
+
+    document.getElementById("uptime").textContent =
+        uptimeText;
+}
+
+
+async function refreshDashboard() {
+
+    const serverStatus =
+        document.getElementById("serverStatus");
+
+    const fileCount =
+        document.getElementById("fileCount");
+
+    const dashboardStatus =
+        document.getElementById("dashboardStatus");
+
+    serverStatus.textContent = "CHECKING...";
+
+    try {
+
+        const response = await fetch(
+            "/api/content",
+            {
+                cache: "no-store"
+            }
+        );
+
+        if (response.ok) {
+
+            serverStatus.textContent = "ONLINE";
+
+            fileCount.textContent = "READY";
+
+            dashboardStatus.textContent =
+                "✅ Dashboard updated.";
+
+        } else {
+
+            serverStatus.textContent = "OFFLINE";
+
+            dashboardStatus.textContent =
+                "❌ Server error.";
+        }
+
+    } catch (error) {
+
+        serverStatus.textContent = "OFFLINE";
+
+        dashboardStatus.textContent =
+            "❌ Could not connect to server.";
+    }
+}
+
+
+/* =========================
+   CONTENT EDITOR
+========================= */
+
+async function loadContent() {
+
+    try {
+
+        const response =
+            await fetch("/api/content");
+
+        const content =
+            await response.json();
+
+        document.getElementById("title").value =
+            content.title || "";
+
+        document.getElementById("welcome").value =
+            content.welcome || "";
+
+        document.getElementById("giveaways").value =
+            content.giveaways || "";
+
+        document.getElementById("scripts").value =
+            content.scripts || "";
+
+        document.getElementById("whatsapp").value =
+            content.whatsapp || "";
+
+        document.getElementById("instagram").value =
+            content.instagram || "";
+
+        document.getElementById("footer").value =
+            content.footer || "";
+
+    } catch (error) {
+
+        document.getElementById(
+            "contentStatus"
+        ).textContent =
+            "❌ Could not load content.";
+    }
+}
+
+
+document.getElementById(
+    "saveContent"
+).addEventListener(
+    "click",
+    async function () {
+
+        const content = {
+
+            title:
+                document.getElementById(
+                    "title"
+                ).value,
+
+            welcome:
+                document.getElementById(
+                    "welcome"
+                ).value,
+
+            giveaways:
+                document.getElementById(
+                    "giveaways"
+                ).value,
+
+            scripts:
+                document.getElementById(
+                    "scripts"
+                ).value,
+
+            whatsapp:
+                document.getElementById(
+                    "whatsapp"
+                ).value,
+
+            instagram:
+                document.getElementById(
+                    "instagram"
+                ).value,
+
+            footer:
+                document.getElementById(
+                    "footer"
+                ).value
+        };
+
+        const status =
+            document.getElementById(
+                "contentStatus"
+            );
+
+        status.textContent = "💾 Saving...";
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/content",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(content)
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (result.success) {
+
+                status.textContent =
+                    "✅ Changes saved!";
+
+            } else {
+
+                status.textContent =
+                    "❌ Could not save changes.";
+            }
+
+        } catch (error) {
+
+            status.textContent =
+                "❌ Save error.";
+        }
+    }
+);
+
+
+/* =========================
+   FILE UPLOAD
+========================= */
+
+document.getElementById(
+    "uploadButton"
+).addEventListener(
+    "click",
+    async function () {
+
+        const fileInput =
+            document.getElementById(
+                "fileInput"
+            );
+
+        const status =
+            document.getElementById(
+                "uploadStatus"
+            );
+
+        if (!fileInput.files.length) {
+
+            status.textContent =
+                "⚠️ Choose a file first.";
+
+            return;
+        }
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "file",
+            fileInput.files[0]
+        );
+formData.append(
+    "game",
+    document.getElementById("gameSelect").value
+);
+
+        status.textContent =
+            "📤 Uploading...";
+
+        try {
+
+            const response =
+                await fetch(
+                    "/upload",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (result.success) {
+
+                status.textContent =
+                    "✅ File uploaded successfully!";
+
+                fileInput.value = "";
+
+                refreshDashboard();
+
+            } else {
+
+                status.textContent =
+                    "❌ Upload failed.";
+            }
+
+        } catch (error) {
+
+            status.textContent =
+                "❌ Upload error.";
+        }
+    }
+);
+
+
+/* =========================
+   START DASHBOARD
+========================= */
+
+document.getElementById(
+    "refreshDashboard"
+).addEventListener(
+    "click",
+    refreshDashboard
+);
+
+loadContent();
+
+refreshDashboard();
+
+updateUptime();
+
+setInterval(
+    updateUptime,
+    1000
+);
+
+setInterval(
+    refreshDashboard,
+    30000
+);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+[
+  {
+    "username": "Cypher111",
+    "passwordHash": "$2b$10$9KpfFx9ASHB.oCFMO1MIgO1hXfuVCIAQ5dJbaF5akuQxIFbTdpkgW",
+    "createdAt": "2026-08-10T20:26:04.716Z"
+  },
+  {
+    "username": "RAT",
+    "passwordHash": "$2b$10$ik8lRjnEUOaq4JarJjHSHO6QtklN5VTRGQpcaCHUUhcB/Kuwa4h5q",
+    "createdAt": "2026-08-24T23:20:51.657Z"
+  },
+  {
+    "username": "RATT",
+    "password": "$2b$10$UrOx8bZFUJ/s4vUCHVxX5uNGHPMkOn3SDeCPksvfE70A43oOrwfaq"
+  }
+]
