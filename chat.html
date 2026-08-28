@@ -19,7 +19,7 @@
     .chat-info { background: #11141c; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2430; }
     .chat-info h3 { margin: 0; font-size: 0.95em; color: #e0e0e0; }
 
-    /* Chat Messages Container */
+    /* Messages Area */
     #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 150px; }
 
     /* WhatsApp Style Bubbles */
@@ -27,14 +27,12 @@
     .msg-sent { align-self: flex-end; background: #005c4b; color: #fff; border-bottom-right-radius: 2px; }
     .msg-received { align-self: flex-start; background: #202c33; color: #fff; border-bottom-left-radius: 2px; }
     .sender-name { font-weight: bold; color: red; margin-bottom: 3px; font-size: 0.8em; display: block; }
-    .delete-btn { margin-left: 8px; color: #ff5555; cursor: pointer; font-size: 0.75em; border: none; background: none; opacity: 0.7; }
-    .delete-btn:hover { opacity: 1; }
 
     /* Hidden Call Overlay & Controls */
     #call-controls { display: none; gap: 10px; margin-right: 10px; }
     #call-controls button { padding: 6px 12px; background: #222c32; color: #fff; border: 1px solid #00a884; border-radius: 15px; font-size: 0.8em; cursor: pointer; }
 
-    /* Video Frames (Hidden by default) */
+    /* Video Frames */
     #video-container { display: none; position: fixed; top: 110px; right: 15px; flex-direction: column; gap: 10px; z-index: 50; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; }
     #video-container video { background: #000; border-radius: 8px; border: 1px solid #333; }
 
@@ -49,8 +47,6 @@
   <!-- Top Navigation Header -->
   <div class="header">
     <h2 style="color: red; margin: 0; font-size: 1.1em; cursor: pointer;" onclick="selectGlobalChat()">Grid Lock</h2>
-    
-    <!-- User Search -->
     <div class="search-box">
       <input type="text" id="user-search" placeholder="Search username...">
       <button onclick="searchUser()">Search</button>
@@ -60,7 +56,6 @@
   <!-- Active Chat Header -->
   <div class="chat-info">
     <h3 id="chatTitle">🌐 Global Chat</h3>
-    
     <div id="call-controls">
       <button id="callBtn" onclick="startCall(activeRecipient)">📞 Call</button>
       <button id="screenBtn" onclick="shareScreen()">🖥️ Share</button>
@@ -70,7 +65,10 @@
   <!-- Messages Area -->
   <div id="messages"></div>
 
-  <!-- Floating Video Container (Hidden until active call) -->
+  <!-- Dynamic Typing Indicator Container -->
+  <div id="typingIndicator" style="position: fixed; bottom: 65px; left: 15px; font-size: 0.8em; color: #00a884; font-style: italic; z-index: 99;"></div>
+
+  <!-- Floating Video Container -->
   <div id="video-container">
     <video id="localVideo" autoplay playsinline muted style="width: 120px; height: 90px;"></video>
     <video id="remoteVideo" autoplay playsinline style="width: 200px; height: 150px;"></video>

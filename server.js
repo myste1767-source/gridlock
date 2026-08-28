@@ -16,17 +16,13 @@ const PORT = process.env.PORT || 3000;
 const messagesFile = path.join(__dirname, "messages.json");
 const usersFile = path.join(__dirname, "users.json");
 
-// --- Web Push VAPID Configuration ---
-const publicVapidKey = "BCw27p1mjShGoXPtxuSdq6xySb_Q9VStzHN2YRgVU19xDK2CV7oUYXMSMdmWGR1AXeJ6o-GKZQhSR1m6qlGiXrs";
-const privateVapidKey = "GTAmp_vrOak6OaWoxYvRy4SBA3ldTY844RjMYFy7vmk";
+// Web Push VAPID Config
+const publicVapidKey = "BKE2SThNaneudVF39fusqbKwusS2zxRvjI5_tz2_-P85xA2Bb99aJN2ZjrWaVB44PtCjrvisXoa3XpujC/Hj4Pgw";
+const privateVapidKey = "zmE20IZFCSikLAuycdEh3n1fmMdCc6b0NB_Cxp-eXA";
 
-webPush.setVapidDetails(
-  "mailto:admin@gridlock.app",
-  publicVapidKey,
-  privateVapidKey
-);
+webPush.setVapidDetails("mailto:admin@gridlock.app", publicVapidKey, privateVapidKey);
 
-const userSubscriptions = {}; // { username: subscription }
+const userSubscriptions = {};
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,62 +32,27 @@ function readJSON(file, fallback) {
   try {
     if (!fs.existsSync(file)) return fallback;
     return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch (error) {
-    return fallback;
-  }
+  } catch (error) { return fallback; }
 }
 
 function writeJSON(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-// Push Subscription Endpoint
 app.post("/subscribe", (req, res) => {
   const { username, subscription } = req.body;
-  if (username && subscription) {
-    userSubscriptions[username] = subscription;
-  }
+  if (username && subscription) userSubscriptions[username] = subscription;
   res.status(201).json({});
 });
 
 function sendNotification(targetUser, title, body) {
   const sub = userSubscriptions[targetUser];
   if (sub) {
-    const payload = JSON.stringify({ title, body });
-    webPush.sendNotification(sub, payload).catch(err => console.error(err));
+    webPush.sendNotification(sub, JSON.stringify({ title, body })).catch(err => console.error(err));
   }
 }
 
 const onlineUsers = {};
-
-app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.json({ success: false, message: "Missing fields" });
-
-  const users = readJSON(usersFile, []);
-  const existing = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-  if (existing) return res.json({ success: false, message: "Username taken" });
-
-  const passHash = bcrypt ? await bcrypt.hash(password, 10) : password;
-  users.push({ username, password: passHash });
-  writeJSON(usersFile, users);
-
-  res.json({ success: true, username });
-});
-
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.json({ success: false, message: "Missing fields" });
-
-  const users = readJSON(usersFile, []);
-  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-  if (!user) return res.json({ success: false, message: "User not found" });
-
-  let match = bcrypt ? await bcrypt.compare(password, user.password) : (user.password === password);
-  if (!match) return res.json({ success: false, message: "Invalid password" });
-
-  res.json({ success: true, username: user.username });
-});
 
 io.on("connection", (socket) => {
   let currentUser = null;
@@ -100,11 +61,34 @@ io.on("connection", (socket) => {
     if (!username) return;
     currentUser = username;
     onlineUsers[username] = socket.id;
-
     socket.emit("chat history", readJSON(messagesFile, []));
     io.emit("update user list", Object.keys(onlineUsers));
   });
 
+  // --- Dynamic Typing Indicators ---
+  socket.on("typing", (data) => {
+    if (data.recipient === "global") {
+      socket.broadcast.emit("user typing", { username: data.username, recipient: "global" });
+    } else {
+      const targetSocket = onlineUsers[data.recipient];
+      if (targetSocket) {
+        io.to(targetSocket).emit("user typing", { username: data.username, recipient: data.recipient });
+      }
+    }
+  });
+
+  socket.on("stop typing", (data) => {
+    if (data.recipient === "global") {
+      socket.broadcast.emit("user stop typing", { username: data.username });
+    } else {
+      const targetSocket = onlineUsers[data.recipient];
+      if (targetSocket) {
+        io.to(targetSocket).emit("user stop typing", { username: data.username });
+      }
+    }
+  });
+
+  // --- Chat Messaging ---
   socket.on("chat message", (data) => {
     if (!data || !data.username || !data.message) return;
 
@@ -113,8 +97,7 @@ io.on("connection", (socket) => {
       sender: data.username,
       recipient: data.recipient || "global",
       message: String(data.message).trim(),
-      timestamp: new Date().toISOString(),
-      seen: false
+      timestamp: new Date().toISOString()
     };
 
     const messages = readJSON(messagesFile, []);
@@ -125,31 +108,10 @@ io.on("connection", (socket) => {
       io.emit("chat message", chatMessage);
     } else {
       const recipientSocket = onlineUsers[chatMessage.recipient];
-      if (recipientSocket) {
-        io.to(recipientSocket).emit("chat message", chatMessage);
-      }
+      if (recipientSocket) io.to(recipientSocket).emit("chat message", chatMessage);
       socket.emit("chat message", chatMessage);
-
-      // Send background notification for direct message
       sendNotification(chatMessage.recipient, `New DM from ${chatMessage.sender}`, chatMessage.message);
     }
-  });
-
-  socket.on("call-user", (data) => {
-    io.to(data.userToCall).emit("incoming-call", {
-      signal: data.signalData,
-      from: socket.id,
-    });
-    // Send push notification for incoming call
-    sendNotification(data.userToCall, "Incoming Call 📞", `${data.from} is calling you on Grid Lock`);
-  });
-
-  socket.on("answer-call", (data) => {
-    io.to(data.to).emit("call-accepted", data.signal);
-  });
-
-  socket.on("ice-candidate", (data) => {
-    io.to(data.to).emit("ice-candidate", data.candidate);
   });
 
   socket.on("disconnect", () => {

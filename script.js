@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = "BCw27p1mjShGoXPtxuSdq6xySb_Q9VStzHN2YRgVU19xDK2CV7oUYXMSMdmWGR1AXeJ6o-GKZQhSR1m6qlGiXrs";
+const PUBLIC_VAPID_KEY = "BKE2SThNaneudVF39fusqbKwusS2zxRvjI5_tz2_-P85xA2Bb99aJN2ZjrWaVB44PtCjrvisXoa3XpujC/Hj4Pgw";
 
 if ("serviceWorker" in navigator && "PushManager" in window) {
   navigator.serviceWorker.register("/sw.js").then(async (reg) => {
@@ -18,6 +18,7 @@ if ("serviceWorker" in navigator && "PushManager" in window) {
     }
   });
 }
+
 const socket = io("https://gridlock-1.onrender.com");
 
 const username = localStorage.getItem("username") || "User_" + Math.floor(Math.random() * 1000);
@@ -32,10 +33,33 @@ const messageInput = document.getElementById("messageInput");
 const callControls = document.getElementById("call-controls");
 const chatTitle = document.getElementById("chatTitle");
 const videoContainer = document.getElementById("video-container");
+const typingIndicator = document.getElementById("typingIndicator");
+
+let typingTimeout;
 
 socket.emit("user_joined", username);
 
-// Discord-Style User Search
+// Typing Events
+messageInput.addEventListener("input", () => {
+  socket.emit("typing", { username: username, recipient: activeRecipient });
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    socket.emit("stop typing", { username: username, recipient: activeRecipient });
+  }, 1500);
+});
+
+socket.on("user typing", (data) => {
+  if (data.username !== username) {
+    typingIndicator.innerText = `${data.username} is typing...`;
+  }
+});
+
+socket.on("user stop typing", () => {
+  typingIndicator.innerText = "";
+});
+
+// Search & Chat Switchers
 function searchUser() {
   const query = document.getElementById("user-search").value.trim();
   if (!query) return;
@@ -59,7 +83,7 @@ function selectGlobalChat() {
   messagesDiv.innerHTML = "";
 }
 
-// Send Message
+// Messaging
 function sendMessage() {
   const msg = messageInput.value.trim();
   if (!msg) return;
@@ -70,6 +94,7 @@ function sendMessage() {
     recipient: activeRecipient
   });
 
+  socket.emit("stop typing", { username: username, recipient: activeRecipient });
   messageInput.value = "";
 }
 
@@ -77,39 +102,24 @@ messageInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-// WhatsApp Style Message Rendering + Delete Button
 socket.on("chat message", (data) => {
   if (data.recipient === "global" && activeRecipient !== "global") return;
   if (data.recipient !== "global" && data.sender !== activeRecipient && data.sender !== username) return;
 
   const isSentByMe = data.sender === username;
   const msgDiv = document.createElement("div");
-  msgDiv.id = `msg-${data.id}`;
   msgDiv.className = `message-bubble ${isSentByMe ? "msg-sent" : "msg-received"}`;
-
-  let deleteBtnHtml = isSentByMe ? `<button class="delete-btn" onclick="deleteMessage(${data.id})">🗑️</button>` : "";
 
   msgDiv.innerHTML = `
     ${!isSentByMe ? `<span class="sender-name">${data.sender}</span>` : ""}
     <span>${data.message}</span>
-    ${deleteBtnHtml}
   `;
 
   messagesDiv.appendChild(msgDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-// Delete Message Logic
-function deleteMessage(msgId) {
-  socket.emit("delete message", { id: msgId, username: username });
-}
-
-socket.on("message deleted", (data) => {
-  const target = document.getElementById(`msg-${data.id}`);
-  if (target) target.remove();
-});
-
-// WebRTC Calling & Screen Share
+// Calling & Screen Share
 async function startCall(targetUser) {
   if (targetUser === "global") return alert("Select a user to call.");
 
