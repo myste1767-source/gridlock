@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 3000;
 const messagesFile = path.join(__dirname, "messages.json");
 const usersFile = path.join(__dirname, "users.json");
 
-// Web Push VAPID Config
-const publicVapidKey = "BExOQLo2x60_ZFdznTR4v4LKOA70Rl9h6kh3SExVluYwT87TSyczPnC5e1pJi1r40YrlSy_zXv_6ZaqDkbxexZE";
+// Updated Web Push VAPID Config
+const publicVapidKey = "BExOQLo2x60_ZFdznTR4v4LKOA70RI9h6kh3SExVluYwT87TSyczPnC5e1pJi1r40YrlSy_zXv_6ZaqDkbxexZE";
 const privateVapidKey = "6sCWF3grPVfnAgjV95G6Bqy6zyTbCwr6iiH4PYI1TZ0";
 
 webPush.setVapidDetails("mailto:admin@gridlock.app", publicVapidKey, privateVapidKey);
@@ -65,7 +65,6 @@ io.on("connection", (socket) => {
     io.emit("update user list", Object.keys(onlineUsers));
   });
 
-  // --- Dynamic Typing Indicators ---
   socket.on("typing", (data) => {
     if (data.recipient === "global") {
       socket.broadcast.emit("user typing", { username: data.username, recipient: "global" });
@@ -88,7 +87,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // --- Chat Messaging ---
   socket.on("chat message", (data) => {
     if (!data || !data.username || !data.message) return;
 
@@ -97,7 +95,7 @@ io.on("connection", (socket) => {
       sender: data.username,
       recipient: data.recipient || "global",
       message: String(data.message).trim(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     const messages = readJSON(messagesFile, []);
@@ -114,6 +112,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("delete message", (data) => {
+    if (!data || !data.id || !data.username) return;
+    let messages = readJSON(messagesFile, []);
+    const index = messages.findIndex(msg => msg.id === data.id && msg.sender === data.username);
+
+    if (index !== -1) {
+      const deletedMsg = messages[index];
+      messages.splice(index, 1);
+      writeJSON(messagesFile, messages);
+
+      if (deletedMsg.recipient === "global") {
+        io.emit("message deleted", { id: data.id });
+      } else {
+        const recipientSocket = onlineUsers[deletedMsg.recipient];
+        if (recipientSocket) io.to(recipientSocket).emit("message deleted", { id: data.id });
+        socket.emit("message deleted", { id: data.id });
+      }
+    }
+  });
+
   socket.on("disconnect", () => {
     if (currentUser && onlineUsers[currentUser]) {
       delete onlineUsers[currentUser];
@@ -125,4 +143,3 @@ io.on("connection", (socket) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log("GridLock server running on port " + PORT);
 });
-

@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = "BExOQLo2x60_ZFdznTR4v4LKOA70Rl9h6kh3SExVluYwT87TSyczPnC5e1pJi1r40YrlSy_zXv_6ZaqDkbxexZE";
+const PUBLIC_VAPID_KEY = "BExOQLo2x60_ZFdznTR4v4LKOA70RI9h6kh3SExVluYwT87TSyczPnC5e1pJi1r40YrlSy_zXv_6ZaqDkbxexZE";
 
 if ("serviceWorker" in navigator && "PushManager" in window) {
   navigator.serviceWorker.register("/sw.js").then(async (reg) => {
@@ -23,6 +23,7 @@ const socket = io("https://gridlock-1.onrender.com");
 
 const username = localStorage.getItem("username") || "User_" + Math.floor(Math.random() * 1000);
 let activeRecipient = "global";
+let allMessages = [];
 let localStream = null;
 let peerConnection = null;
 
@@ -39,7 +40,6 @@ let typingTimeout;
 
 socket.emit("user_joined", username);
 
-// Typing Events
 messageInput.addEventListener("input", () => {
   socket.emit("typing", { username: username, recipient: activeRecipient });
 
@@ -59,7 +59,6 @@ socket.on("user stop typing", () => {
   typingIndicator.innerText = "";
 });
 
-// Search & Chat Switchers
 function searchUser() {
   const query = document.getElementById("user-search").value.trim();
   if (!query) return;
@@ -73,17 +72,16 @@ function selectUserChat(targetUser) {
   activeRecipient = targetUser;
   chatTitle.innerText = "💬 " + targetUser;
   callControls.style.display = "flex";
-  messagesDiv.innerHTML = "";
+  renderMessages();
 }
 
 function selectGlobalChat() {
   activeRecipient = "global";
   chatTitle.innerText = "🌐 Global Chat";
   callControls.style.display = "none";
-  messagesDiv.innerHTML = "";
+  renderMessages();
 }
 
-// Messaging
 function sendMessage() {
   const msg = messageInput.value.trim();
   if (!msg) return;
@@ -98,28 +96,59 @@ function sendMessage() {
   messageInput.value = "";
 }
 
+function deleteMessage(id) {
+  socket.emit("delete message", { id, username });
+}
+
 messageInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-socket.on("chat message", (data) => {
-  if (data.recipient === "global" && activeRecipient !== "global") return;
-  if (data.recipient !== "global" && data.sender !== activeRecipient && data.sender !== username) return;
-
-  const isSentByMe = data.sender === username;
-  const msgDiv = document.createElement("div");
-  msgDiv.className = `message-bubble ${isSentByMe ? "msg-sent" : "msg-received"}`;
-
-  msgDiv.innerHTML = `
-    ${!isSentByMe ? `<span class="sender-name">${data.sender}</span>` : ""}
-    <span>${data.message}</span>
-  `;
-
-  messagesDiv.appendChild(msgDiv);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+socket.on("chat history", (history) => {
+  allMessages = history;
+  renderMessages();
 });
 
-// Calling & Screen Share
+socket.on("chat message", (data) => {
+  allMessages.push(data);
+  renderMessages();
+});
+
+socket.on("message deleted", (data) => {
+  allMessages = allMessages.filter(msg => msg.id !== data.id);
+  renderMessages();
+});
+
+function renderMessages() {
+  messagesDiv.innerHTML = "";
+  
+  const filteredMessages = allMessages.filter(msg => {
+    if (activeRecipient === "global") return msg.recipient === "global";
+    return (msg.sender === username && msg.recipient === activeRecipient) ||
+           (msg.sender === activeRecipient && msg.recipient === username);
+  });
+
+  filteredMessages.forEach(msg => {
+    const isSentByMe = msg.sender === username;
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message-bubble ${isSentByMe ? "msg-sent" : "msg-received"}`;
+    msgDiv.setAttribute("data-id", msg.id);
+
+    msgDiv.innerHTML = `
+      ${!isSentByMe ? `<span class="sender-name">${msg.sender}</span>` : ""}
+      <span>${msg.message}</span>
+      <div class="msg-meta">
+        <span>${msg.timestamp || ""}</span>
+        ${isSentByMe ? `<span class="delete-btn" onclick="deleteMessage(${msg.id})">🗑️</span>` : ""}
+      </div>
+    `;
+
+    messagesDiv.appendChild(msgDiv);
+  });
+
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
 async function startCall(targetUser) {
   if (targetUser === "global") return alert("Select a user to call.");
 
@@ -146,4 +175,3 @@ async function shareScreen() {
   localStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
   document.getElementById("localVideo").srcObject = localStream;
 }
-
