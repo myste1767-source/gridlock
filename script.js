@@ -1,57 +1,42 @@
 const socket = io("https://gridlock-1.onrender.com");
 
-const username = localStorage.getItem("username") || "Guest_" + Math.floor(Math.random() * 1000);
+const username = localStorage.getItem("username") || "User_" + Math.floor(Math.random() * 1000);
 let activeRecipient = "global";
 let localStream = null;
 let peerConnection = null;
 
-const rtcConfig = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-};
+const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-// DOM Elements
 const messagesDiv = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-const userListContainer = document.getElementById("usersList");
 const callControls = document.getElementById("call-controls");
 const chatTitle = document.getElementById("chatTitle");
-
-// Hide call buttons until a direct user is selected
-if (callControls) callControls.style.display = "none";
+const videoContainer = document.getElementById("video-container");
 
 socket.emit("user_joined", username);
 
-// Render Online Users List
-socket.on("update user list", (users) => {
-  if (!userListContainer) return;
-  userListContainer.innerHTML = "";
-
-  users.forEach((user) => {
-    if (user === username) return; // Skip self
-
-    const userItem = document.createElement("div");
-    userItem.style.cssText = "padding: 10px; cursor: pointer; border-bottom: 1px solid #222; color: #fff;";
-    userItem.innerText = "👤 " + user;
-
-    userItem.onclick = () => selectUserChat(user);
-    userListContainer.appendChild(userItem);
-  });
-});
-
-// Select a User to DM & Call
-function selectUserChat(targetUser) {
-  activeRecipient = targetUser;
-  if (chatTitle) chatTitle.innerText = "💬 " + targetUser;
-  if (callControls) callControls.style.display = "flex"; // Show Call/Screen Share buttons for DM
-  messagesDiv.innerHTML = ""; // Clear view for DM chat history
+// Discord-Style User Search
+function searchUser() {
+  const query = document.getElementById("user-search").value.trim();
+  if (!query) return;
+  if (query.toLowerCase() === username.toLowerCase()) return alert("Can't message yourself!");
+  
+  selectUserChat(query);
+  document.getElementById("user-search").value = "";
 }
 
-// Global Chat Switcher
+function selectUserChat(targetUser) {
+  activeRecipient = targetUser;
+  chatTitle.innerText = "💬 " + targetUser;
+  callControls.style.display = "flex";
+  messagesDiv.innerHTML = "";
+}
+
 function selectGlobalChat() {
   activeRecipient = "global";
-  if (chatTitle) chatTitle.innerText = "LIVE GLOBAL CHAT";
-  if (callControls) callControls.style.display = "none"; // Hide Call buttons in Global
+  chatTitle.innerText = "🌐 Global Chat";
+  callControls.style.display = "none";
+  messagesDiv.innerHTML = "";
 }
 
 // Send Message
@@ -68,51 +53,66 @@ function sendMessage() {
   messageInput.value = "";
 }
 
-sendBtn.onclick = sendMessage;
 messageInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-// Display Incoming Messages
+// WhatsApp Style Message Rendering + Delete Button
 socket.on("chat message", (data) => {
   if (data.recipient === "global" && activeRecipient !== "global") return;
   if (data.recipient !== "global" && data.sender !== activeRecipient && data.sender !== username) return;
 
+  const isSentByMe = data.sender === username;
   const msgDiv = document.createElement("div");
-  msgDiv.style.cssText = "margin-bottom: 8px; padding: 8px 12px; border-radius: 8px; background: #222; max-width: 80%;";
-  msgDiv.innerHTML = `<strong style="color: red;">${data.sender}:</strong> ${data.message}`;
+  msgDiv.id = `msg-${data.id}`;
+  msgDiv.className = `message-bubble ${isSentByMe ? "msg-sent" : "msg-received"}`;
+
+  let deleteBtnHtml = isSentByMe ? `<button class="delete-btn" onclick="deleteMessage(${data.id})">🗑️</button>` : "";
+
+  msgDiv.innerHTML = `
+    ${!isSentByMe ? `<span class="sender-name">${data.sender}</span>` : ""}
+    <span>${data.message}</span>
+    ${deleteBtnHtml}
+  `;
+
   messagesDiv.appendChild(msgDiv);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-// --- WebRTC Calling Logic ---
-async function startCall(targetUser) {
-  if (targetUser === "global") return alert("Select a specific user to call.");
+// Delete Message Logic
+function deleteMessage(msgId) {
+  socket.emit("delete message", { id: msgId, username: username });
+}
 
+socket.on("message deleted", (data) => {
+  const target = document.getElementById(`msg-${data.id}`);
+  if (target) target.remove();
+});
+
+// WebRTC Calling & Screen Share
+async function startCall(targetUser) {
+  if (targetUser === "global") return alert("Select a user to call.");
+
+  videoContainer.style.display = "flex";
   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   document.getElementById("localVideo").srcObject = localStream;
 
   peerConnection = new RTCPeerConnection(rtcConfig);
   localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-  peerConnection.ontrack = (event) => {
-    document.getElementById("remoteVideo").srcObject = event.streams[0];
-  };
-
-  peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.emit("ice-candidate", { to: targetUser, candidate: event.candidate });
-    }
+  peerConnection.ontrack = (e) => document.getElementById("remoteVideo").srcObject = e.streams[0];
+  peerConnection.onicecandidate = (e) => {
+    if (e.candidate) socket.emit("ice-candidate", { to: targetUser, candidate: e.candidate });
   };
 
   const offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
-
   socket.emit("call-user", { userToCall: targetUser, signalData: offer });
 }
 
 async function shareScreen() {
   if (activeRecipient === "global") return alert("Select a user to share screen with.");
+  videoContainer.style.display = "flex";
   localStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
   document.getElementById("localVideo").srcObject = localStream;
 }
