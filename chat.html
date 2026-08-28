@@ -37,6 +37,21 @@
         <input type="text" id="messageInput" placeholder="Type a message..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #333; background: #222; color: #fff; outline: none;">
         <button id="sendBtn" style="background: red; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-weight: bold;">></button>
     </div>
+<!-- Call & Screen Share Controls -->
+<div id="call-controls" style="margin: 10px 0; display: flex; gap: 10px;">
+  <button id="callBtn" onclick="startCall(activeRecipient)" style="padding: 8px 12px; cursor: pointer;">
+    📞 Call User
+  </button>
+  <button id="screenBtn" onclick="shareScreen()" style="padding: 8px 12px; cursor: pointer;">
+    🖥️ Share Screen
+  </button>
+</div>
+
+<!-- Video Displays -->
+<div id="video-container" style="display: flex; gap: 10px; margin-top: 10px;">
+  <video id="localVideo" autoplay playsinline muted style="width: 150px; background: #000; border-radius: 8px;"></video>
+  <video id="remoteVideo" autoplay playsinline style="width: 300px; background: #000; border-radius: 8px;"></video>
+</div>
 
     <script src="script.js"></script>
 </body>

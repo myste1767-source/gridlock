@@ -1,3 +1,4 @@
+
 const socket = io();
 
 const messagesContainer = document.getElementById("messages");
@@ -200,3 +201,53 @@ messageInput.addEventListener("keypress", (e) => {
         sendMessage();
     }
 });
+const peerConfig = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+};
+
+let localStream;
+let peerConnection;
+
+// 1. Initialize Microphone & Video Call
+async function startCall(targetSocketId) {
+  localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+  peerConnection = new RTCPeerConnection(peerConfig);
+
+  // Add local tracks to WebRTC connection
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+  // Handle network candidates
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", { to: targetSocketId, candidate: event.candidate });
+    }
+  };
+
+  // Create and send offer
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+  socket.emit("call-user", { userToCall: targetSocketId, signalData: offer });
+}
+
+// 2. Screen Sharing Feature
+async function shareScreen() {
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    const screenTrack = screenStream.getVideoTracks()[0];
+
+    // Swap camera video track with screen track
+    const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+    if (sender) {
+      sender.replaceTrack(screenTrack);
+    }
+
+    // Revert back when screen share ends
+    screenTrack.onended = () => {
+      const videoTrack = localStream.getVideoTracks()[0];
+      sender.replaceTrack(videoTrack);
+    };
+  } catch (err) {
+    console.error("Screen share error:", err);
+  }
+}
+
