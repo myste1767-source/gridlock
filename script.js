@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = "BKE2SThNaneudVF39fusqbKwusS2zxRvjI5_tz2_-P85xA2Bb99aJN2ZjrWaVB44PtCjrvisXoa3XpujC/Hj4Pgw";
+const PUBLIC_VAPID_KEY = "BCw27p1mjShGoXPtxuSdq6xySb_Q9VStzHN2YRgVU19xDK2CV7oUYXMSMdmWGR1AXeJ6o-GKZQhSR1m6qlGiXrs";
 
 if ("serviceWorker" in navigator && "PushManager" in window) {
   navigator.serviceWorker.register("/sw.js").then(async (reg) => {

@@ -17,8 +17,8 @@ const messagesFile = path.join(__dirname, "messages.json");
 const usersFile = path.join(__dirname, "users.json");
 
 // --- Web Push VAPID Configuration ---
-const publicVapidKey = "BKE2SThNaneudVF39fusqbKwusS2zxRvjI5_tz2_-P85xA2Bb99aJN2ZjrWaVB44PtCjrvisXoa3XpujC/Hj4Pgw";
-const privateVapidKey = "zmE20IZFCSikLAuycdEh3n1fmMdCc6b0NB_Cxp-eXA";
+const publicVapidKey = "BCw27p1mjShGoXPtxuSdq6xySb_Q9VStzHN2YRgVU19xDK2CV7oUYXMSMdmWGR1AXeJ6o-GKZQhSR1m6qlGiXrs";
+const privateVapidKey = "GTAmp_vrOak6OaWoxYvRy4SBA3ldTY844RjMYFy7vmk";
 
 webPush.setVapidDetails(
   "mailto:admin@gridlock.app",
