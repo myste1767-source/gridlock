@@ -3,6 +3,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
 const fs = require("fs");
+const webPush = require("web-push");
 
 let bcrypt;
 try { bcrypt = require("bcryptjs"); } catch (e) { bcrypt = null; }
@@ -14,6 +15,18 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 const messagesFile = path.join(__dirname, "messages.json");
 const usersFile = path.join(__dirname, "users.json");
+
+// --- Web Push VAPID Configuration ---
+const publicVapidKey = "BKE2SThNaneudVF39fusqbKwusS2zxRvjI5_tz2_-P85xA2Bb99aJN2ZjrWaVB44PtCjrvisXoa3XpujC/Hj4Pgw";
+const privateVapidKey = "zmE20IZFCSikLAuycdEh3n1fmMdCc6b0NB_Cxp-eXA";
+
+webPush.setVapidDetails(
+  "mailto:admin@gridlock.app",
+  publicVapidKey,
+  privateVapidKey
+);
+
+const userSubscriptions = {}; // { username: subscription }
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,7 +45,23 @@ function writeJSON(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-// Track online users: { username: socketId }
+// Push Subscription Endpoint
+app.post("/subscribe", (req, res) => {
+  const { username, subscription } = req.body;
+  if (username && subscription) {
+    userSubscriptions[username] = subscription;
+  }
+  res.status(201).json({});
+});
+
+function sendNotification(targetUser, title, body) {
+  const sub = userSubscriptions[targetUser];
+  if (sub) {
+    const payload = JSON.stringify({ title, body });
+    webPush.sendNotification(sub, payload).catch(err => console.error(err));
+  }
+}
+
 const onlineUsers = {};
 
 app.post("/register", async (req, res) => {
@@ -100,60 +129,19 @@ io.on("connection", (socket) => {
         io.to(recipientSocket).emit("chat message", chatMessage);
       }
       socket.emit("chat message", chatMessage);
+
+      // Send background notification for direct message
+      sendNotification(chatMessage.recipient, `New DM from ${chatMessage.sender}`, chatMessage.message);
     }
   });
 
-  socket.on("mark seen", (data) => {
-    if (!data || !data.sender || !data.recipient) return;
-    const messages = readJSON(messagesFile, []);
-    let updated = false;
-
-    messages.forEach(msg => {
-      if (msg.sender === data.sender && msg.recipient === data.recipient && !msg.seen) {
-        msg.seen = true;
-        updated = true;
-      }
-    });
-
-    if (updated) {
-      writeJSON(messagesFile, messages);
-      const senderSocket = onlineUsers[data.sender];
-      if (senderSocket) {
-        io.to(senderSocket).emit("messages marked seen", {
-          sender: data.sender,
-          recipient: data.recipient
-        });
-      }
-    }
-  });
-
-  socket.on("delete message", (data) => {
-    if (!data || !data.id || !data.username) return;
-    const messages = readJSON(messagesFile, []);
-    const index = messages.findIndex(msg => msg.id === data.id && msg.sender === data.username);
-    if (index === -1) return;
-
-    const deletedMsg = messages[index];
-    messages.splice(index, 1);
-    writeJSON(messagesFile, messages);
-
-    if (deletedMsg.recipient === "global") {
-      io.emit("message deleted", { id: data.id });
-    } else {
-      const recipientSocket = onlineUsers[deletedMsg.recipient];
-      if (recipientSocket) {
-        io.to(recipientSocket).emit("message deleted", { id: data.id });
-      }
-      socket.emit("message deleted", { id: data.id });
-    }
-  });
-
-  // WebRTC Call & Screen Share signaling handlers
   socket.on("call-user", (data) => {
     io.to(data.userToCall).emit("incoming-call", {
       signal: data.signalData,
       from: socket.id,
     });
+    // Send push notification for incoming call
+    sendNotification(data.userToCall, "Incoming Call 📞", `${data.from} is calling you on Grid Lock`);
   });
 
   socket.on("answer-call", (data) => {

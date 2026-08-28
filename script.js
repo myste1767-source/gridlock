@@ -1,3 +1,23 @@
+const PUBLIC_VAPID_KEY = "BKE2SThNaneudVF39fusqbKwusS2zxRvjI5_tz2_-P85xA2Bb99aJN2ZjrWaVB44PtCjrvisXoa3XpujC/Hj4Pgw";
+
+if ("serviceWorker" in navigator && "PushManager" in window) {
+  navigator.serviceWorker.register("/sw.js").then(async (reg) => {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: PUBLIC_VAPID_KEY
+      });
+
+      const username = localStorage.getItem("username") || "Guest";
+      fetch("/subscribe", {
+        method: "POST",
+        body: JSON.stringify({ username: username, subscription: sub }),
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  });
+}
 const socket = io("https://gridlock-1.onrender.com");
 
 const username = localStorage.getItem("username") || "User_" + Math.floor(Math.random() * 1000);
